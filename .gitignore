@@ -150,3 +150,13 @@ dist/
 /guix-build-*
 
 /ci/scratch/
+src/denariusd
+src/denarius-wallet
+src/denarius-cli
+src/denarius-tx
+src/denarius-util
+src/denariusd
+src/denarius-wallet
+src/denarius-cli
+src/denarius-tx
+src/denarius-util
