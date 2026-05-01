@@ -25,6 +25,7 @@
 #include <validation.h>
 
 #include <algorithm>
+#include <string>
 #include <utility>
 
 namespace node {
@@ -155,7 +156,17 @@ std::unique_ptr<CBlockTemplate> BlockAssembler::CreateNewBlock(const CScript& sc
     coinbaseTx.vout.resize(1);
     coinbaseTx.vout[0].scriptPubKey = scriptPubKeyIn;
     coinbaseTx.vout[0].nValue = nFees + GetBlockSubsidy(nHeight, chainparams.GetConsensus());
-    coinbaseTx.vin[0].scriptSig = CScript() << nHeight << OP_0;
+    // At each halving block embed a commemorative message; all other blocks get OP_0
+    const Consensus::Params& consensus = chainparams.GetConsensus();
+    CScript coinbaseScript = CScript() << nHeight;
+    if (nHeight > 0 && nHeight % consensus.nSubsidyHalvingInterval == 0) {
+        int halvingNumber = nHeight / consensus.nSubsidyHalvingInterval;
+        std::string halvingMsg = "Denarius Halving #" + std::to_string(halvingNumber);
+        coinbaseScript << std::vector<unsigned char>(halvingMsg.begin(), halvingMsg.end());
+    } else {
+        coinbaseScript << OP_0;
+    }
+    coinbaseTx.vin[0].scriptSig = coinbaseScript;
     pblock->vtx[0] = MakeTransactionRef(std::move(coinbaseTx));
     pblocktemplate->vchCoinbaseCommitment = m_chainstate.m_chainman.GenerateCoinbaseCommitment(*pblock, pindexPrev);
     pblocktemplate->vTxFees[0] = -nFees;
